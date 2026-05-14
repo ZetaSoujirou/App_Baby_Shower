@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const usuariosController = require('../controllers/usuarios.controller');
+const { verificarRol } = require('../middlewares/auth.middleware'); // Importamos tu nuevo middleware
 
-// Definimos las rutas exactas del contrato (Registro, Login y Editar)
+// RF-01 y RF-02: Rutas Públicas (Cualquiera entra)
 router.post('/registro', usuariosController.registrarUsuario);
 router.post('/login', usuariosController.loginUsuario);
-router.put('/:id', usuariosController.editarUsuario);
+
+// RF-04: Ruta Protegida (¡SOLO EL ADMIN PUEDE ENTRAR!)
+// Agregamos el middleware antes del controlador
+router.put('/editar/:id', verificarRol(['admin']), usuariosController.editarUsuario);
 
 module.exports = router;
 

@@ -3,61 +3,34 @@ const mongoose = require("mongoose");
 const cors = require('cors'); 
 require("dotenv").config();
 
-const Regalo = require('./models/Regalo');
 const app = express();
 
+// --- MIDDLEWARES GLOBALES ---
 app.use(cors()); 
 app.use(express.json());
 
+// --- CONEXIÓN A BASE DE DATOS (MONGODB ATLAS) ---
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ Mongo conectado"))
-  .catch((err) => console.log("❌ Error Mongo:", err));
+  .then(() => console.log("✅ Mongo conectado con éxito"))
+  .catch((err) => console.log("❌ Error de conexión a Mongo:", err));
 
-// Rutas de Usuarios (Registro/Login)
+// --- REGISTRO DE RUTAS (API) ---
+
+// 1. Rutas de Usuarios (Registro, Login, Perfiles)
 app.use('/api/usuarios', require('./routes/usuarios'));
 
-// --- RUTAS DE REGALOS ---
+// 2. Rutas de Regalos (Listado, Creación, Reserva, Eliminación)
+// Al usar este archivo, ya aplicamos la seguridad de los roles (Webmaster/Anfitrión/Invitado)
+app.use('/api/regalos', require('./routes/regalos')); 
 
-// Ver todos los regalos
-app.get('/api/regalos', async (req, res) => {
-    try {
-        // .populate('invitadoId') permite traer los datos del invitado si eres admin
-        const lista = await Regalo.find().populate('invitadoId', 'nombre correo');
-        res.json(lista);
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error', error: error.message });
-    }
+// --- RUTA BASE Y SERVIDOR ---
+app.get("/", (req, res) => {
+    res.send("🚀 API Baby Shower Online - Backend Funcionando");
 });
 
-// Reservar un regalo (EL PASO 3)
-app.put('/api/regalos/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { invitadoId } = req.body; // Recibimos el ID del que logueó
-
-        const regaloActualizado = await Regalo.findByIdAndUpdate(
-            id,
-            { estado: 'reservado', invitadoId: invitadoId },
-            { new: true }
-        );
-        res.json({ mensaje: '¡Reservado con éxito!', regalo: regaloActualizado });
-    } catch (error) {
-        res.status(400).json({ mensaje: 'Error al reservar', error: error.message });
-    }
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🔥 Servidor corriendo en el puerto ${PORT}`);
+    console.log(`✅ Rutas de Webmaster activas en /api/regalos`);
 });
-
-// Crear regalo
-app.post('/api/regalos', async (req, res) => {
-    try {
-        const nuevo = new Regalo(req.body);
-        await nuevo.save();
-        res.status(201).json(nuevo);
-    } catch (error) {
-        res.status(400).json({ mensaje: 'Error', error: error.message });
-    }
-});
-
-app.get("/", (req, res) => res.send("🚀 API Baby Shower Online"));
-
-app.listen(3000, () => console.log("🔥 Servidor en puerto 3000"));
 

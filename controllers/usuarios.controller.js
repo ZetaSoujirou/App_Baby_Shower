@@ -29,16 +29,16 @@ exports.registrarUsuario = async (req, res) => {
 exports.loginUsuario = async (req, res) => {
   try {
     const { correo, contrasena } = req.body;
-    
-    // Buscamos al usuario. Al no usar .select(), traerá todos los campos incluyendo el 'rol'
     const usuario = await Usuario.findOne({ correo, contrasena });
 
     if (!usuario) {
       return res.status(401).json({ mensaje: "Correo o contraseña incorrectos" });
     }
 
-    // Devolvemos el objeto completo para que el frontend vea el rol
-    res.status(200).json({ usuario });
+    // Extraemos los datos que queremos enviar, EXCLUYENDO la contraseña
+    const { contrasena: _, ...datosPublicos } = usuario._doc;
+
+    res.status(200).json({ usuario: datosPublicos });
   } catch (error) {
     res.status(500).json({ mensaje: "Error en el servidor", error: error.message });
   }
