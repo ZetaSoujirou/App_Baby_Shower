@@ -1,14 +1,13 @@
 const Usuario = require('../models/Usuario');
+const jwt = require('jsonwebtoken'); // <-- ASEGÚRATE DE TENER ESTA LÍNEA ARRIBA
 
-// RF-01: Registro de Usuario (Anfitrión o Invitado)
+// RF-01: Registro de Usuario (Se queda como lo tenías)
 exports.registrarUsuario = async (req, res) => {
   try {
-    const { nombre, correo, contrasena, rol } = req.body; // Agregamos 'rol' aquí
-    
+    const { nombre, correo, contrasena, rol } = req.body;
     const existe = await Usuario.findOne({ correo });
     if (existe) return res.status(400).json({ mensaje: "El correo ya está en uso" });
 
-    // Si no se envía un rol, por defecto será 'invitado'
     const nuevo = new Usuario({ 
       nombre, 
       correo, 
@@ -17,15 +16,13 @@ exports.registrarUsuario = async (req, res) => {
     });
     
     await nuevo.save();
-    
-    // Devolvemos el usuario creado para confirmar que se guardó el rol
     res.status(201).json({ mensaje: "Usuario creado con éxito", usuario: nuevo });
   } catch (error) {
     res.status(500).json({ mensaje: "Error al registrar", error: error.message });
   }
 };
 
-// RF-02: Inicio de Sesión (Login)
+// RF-02: Inicio de Sesión (REEMPLAZA ESTA FUNCIÓN COMPLETA)
 exports.loginUsuario = async (req, res) => {
   try {
     const { correo, contrasena } = req.body;
@@ -35,16 +32,29 @@ exports.loginUsuario = async (req, res) => {
       return res.status(401).json({ mensaje: "Correo o contraseña incorrectos" });
     }
 
-    // Extraemos los datos que queremos enviar, EXCLUYENDO la contraseña
+    // 1. GENERAMOS LA LLAVE (TOKEN) CON EL ROL
+    const token = jwt.sign(
+      { id: usuario._id, rol: usuario.rol }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '8h' } 
+    );
+
+    // 2. EXTRAEMOS DATOS SIN LA CONTRASEÑA
     const { contrasena: _, ...datosPublicos } = usuario._doc;
 
-    res.status(200).json({ usuario: datosPublicos });
+    // 3. RESPONDEMOS CON TODO
+    res.status(200).json({ 
+      mensaje: "Login exitoso",
+      usuario: datosPublicos,
+      token: token 
+    });
+
   } catch (error) {
     res.status(500).json({ mensaje: "Error en el servidor", error: error.message });
   }
 };
 
-// RF-04: Editar Perfil
+// RF-04: Editar Perfil (Se queda igual)
 exports.editarUsuario = async (req, res) => {
   try {
     const { id } = req.params;

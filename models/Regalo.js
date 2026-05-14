@@ -1,15 +1,21 @@
 const mongoose = require('mongoose');
 
 const regaloSchema = new mongoose.Schema({
-  nombre_articulo: { type: String, required: true },
+  // Cambiamos 'nombre_articulo' por 'nombre' para que coincida con Laravel
+  nombre: { type: String, required: true },
+  
+  // Agregamos descripción porque el frontend la está enviando
+  descripcion: { type: String, default: '' },
+  
+  // Cambiamos 'link_compra' por 'url_imagen' o como lo llame tu colega
+  url_imagen: { type: String, default: '' },
+
   categoria: { type: String, default: 'General' },
-  link_compra: { type: String },
   estado: { 
     type: String, 
     enum: ['disponible', 'reservado'], 
     default: 'disponible' 
   },
-  // Aquí conectamos con el ID del usuario/invitado
   invitadoId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Usuario',
@@ -18,3 +24,4 @@ const regaloSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Regalo', regaloSchema);
+

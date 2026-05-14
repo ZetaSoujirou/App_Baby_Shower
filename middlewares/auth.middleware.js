@@ -1,18 +1,33 @@
-// middleware/auth.middleware.js
+const jwt = require('jsonwebtoken');
 
-// Este middleware verifica si el usuario tiene el rol necesario
 exports.verificarRol = (rolesPermitidos) => {
     return (req, res, next) => {
-        // En un sistema real, aquí leerías el usuario desde un Token (JWT)
-        // Por ahora, asumiremos que el frontend envía el rol en los headers o body para pruebas
-        const rolUsuario = req.headers['x-user-role']; 
+        // 1. Obtener el token del header (Authorization: Bearer TOKEN)
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
 
-        if (!rolesPermitidos.includes(rolUsuario)) {
-            return res.status(403).json({ 
-                mensaje: "Acceso denegado: No tienes los permisos de " + rolesPermitidos.join(' o ') 
-            });
+        if (!token) {
+            return res.status(401).json({ mensaje: "No hay token, autorización denegada" });
         }
-        next();
+
+        try {
+            // 2. Verificar el token usando tu clave secreta
+            // Asegúrate de tener JWT_SECRET en tu archivo .env
+            const cifrado = jwt.verify(token, process.env.JWT_SECRET);
+            
+            // 3. Guardar los datos del usuario en la petición
+            req.usuario = cifrado;
+
+            // 4. Validar si el rol que viene en el TOKEN está permitido
+            if (!rolesPermitidos.includes(req.usuario.rol)) {
+                return res.status(403).json({ 
+                    mensaje: "Acceso denegado: No tienes los permisos de " + rolesPermitidos.join(' o ') 
+                });
+            }
+
+            next();
+        } catch (error) {
+            res.status(401).json({ mensaje: "Token no es válido" });
+        }
     };
 };
-
