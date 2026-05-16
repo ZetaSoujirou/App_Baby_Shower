@@ -9,7 +9,7 @@ router.post('/login', usuariosController.loginUsuario);
 
 // RF-04: Ruta Protegida (¡SOLO EL ADMIN PUEDE ENTRAR!)
 // Agregamos el middleware antes del controlador
-router.put('/editar/:id', verificarRol(['admin']), usuariosController.editarUsuario);
+router.put('/editar/:id', verificarRol(['administrador']), usuariosController.editarUsuario);
 
 module.exports = router;
 
